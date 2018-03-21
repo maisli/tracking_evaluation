@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+.Python
+.env/
+data/
+all/
+logs/
+per01_fill_output.hdf5
+per_body_dilation_133/
+spare_seeds_in_all_slices/
+
+
+04_ev_track_graph.py
