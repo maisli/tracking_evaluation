@@ -244,21 +244,20 @@ def get_tra_score(res_tracks, res_track_graph, gt_tracks, gt_track_graph, output
     tra_score = w_ns * ns + w_fn * fn + w_fp * fp + w_ed * ed + w_ea * ea + w_ec * ec
     
     report = {
-        'tra_score': tra_score,
-        'non_split': ns,
-        'false_negative': fn,
-        'false_positive': fp,
-        'delete_edge': ed,
-        'add_edge': ea,
-        'alter_edge': ec,
-        'weighted_non_split': w_ns * ns,
-        'weighted_false_negative': w_fn * fn,
-        'weighted_false_positive': w_fp * fp,
-        'weighted_delete_edge': w_ed * ed,
-        'weighted_add_edge': w_ea * ea,
-        'weighted_alter_edge': w_ec * ec
+        'NS': ns,
+        'FN': fn,
+        'FP': fp,
+        'ED': ed,
+        'EA': ea,
+        'EC': ec,
+        'wNS': w_ns * ns,
+        'wFN': w_fn * fn,
+        'wFP': w_fp * fp,
+        'wED': w_ed * ed,
+        'wEA': w_ea * ea,
+        'wEC': w_ec * ec,
+        'wSum': tra_score
     }
-
 
     if output_errors:
         return tra_score, report, vertex_errors, edge_errors
@@ -281,7 +280,8 @@ def get_tra(res_tracks, res_track_graph, gt_tracks, gt_track_graph, output_error
                 gt_tracks, gt_track_graph)
 
     tra_score = 1 - min(res_tra_score, gt_tra_score) / float(gt_tra_score)
-    res_report['total_tra_score'] = tra_score
+    res_report['TRA'] = tra_score
+    res_report['gt_wSum'] = gt_report['wSum']
     
     if output_errors:
         return res_report, vertex_errors, edge_errors

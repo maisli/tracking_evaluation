@@ -15,6 +15,15 @@ def replace(array, old_values, new_values):
     return values_map[array]
 
 
+def update_lineage_label(labels, lineages, cells):
+    
+    for cell_label, lineage_label in labels:
+        if cell_label != 0:
+            lineages[cells==cell_label] = lineage_label
+
+    return lineages
+
+
 def find_centers(ids):
 
     all_ids = np.unique(ids)
@@ -81,7 +90,7 @@ def relabel_cells(cells, num_pixel):
 
 def apply_grey_dilation(unique_cells, lineages, iteration=1):
 
-    print 'apply grey dilation'
+    print 'apply grey dilation (with ', iteration, ' iterations)' 
     
     for z in range(unique_cells.shape[0]):
         overlap = np.array([unique_cells[z].flatten(), lineages[z].flatten()])
@@ -91,8 +100,7 @@ def apply_grey_dilation(unique_cells, lineages, iteration=1):
             unique_cells[z] = ndimage.grey_dilation(unique_cells[z], size=(3,3))
         
         for cell_label, lineage_label in labels:
-            if cell_label != 0:
-                lineages[z][unique_cells[z]==cell_label] = lineage_label
+            lineages[z][unique_cells[z]==cell_label] = lineage_label
     
     return unique_cells, lineages
 
@@ -101,15 +109,13 @@ def apply_3d_grey_dilation(cells, lineages, iteration=1):
 
     print 'apply 3d grey dilation'
 
-    overlap = np.array([unique_cells[z].flatten(), lineages[z].flatten()])
+    overlap = np.array([cells.flatten(), lineages.flatten()])
     labels = np.transpose(np.unique(overlap, axis=1))
 
     for i in range(iteration):
         cells = ndimage.grey_dilation(cells, size=(3,3,3))
 
-    for cell_label, lineage_label in labels:
-        if cell_label != 0:
-            lineages[unique_cells==cell_label] = lineage_label
+    lineages = update_lineage_label(labels, lineages, cells)
 
     return cells, lineages
 
@@ -118,9 +124,10 @@ def apply_watershed(raw, unique_cells, lineages, mask=None):
     
     print 'apply watershed'
 
+    overlap = np.array([unique_cells.flatten(), lineages.flatten()])
+    labels = np.transpose(np.unique(overlap, axis=1))
+    
     for z in range(unique_cells.shape[0]):
-        overlap = np.array([unique_cells[z].flatten(), lineages[z].flatten()])
-        labels = np.transpose(np.unique(overlap, axis=1))
         raw[z] = ndimage.gaussian_filter(raw[z], sigma=1)
         
         if mask is not None:
@@ -129,14 +136,12 @@ def apply_watershed(raw, unique_cells, lineages, mask=None):
         else:
             unique_cells[z] = watershed(raw[z], unique_cells[z], np.ones((3,3)))
         
-        
         #unique_cells[z] = ndimage.watershed_ift(raw[z].astype(np.uint8), 
         #        unique_cells[z].astype(np.int), structure=np.ones((3,3)))
         #unique_cells[z] = random_walker(raw[z], unique_cells[z])
-
+        
         for cell_label, lineage_label in labels:
-            if cell_label != 0:
-                lineages[z][unique_cells[z]==cell_label] = lineage_label
+            lineages[z][unique_cells[z]==cell_label] = lineage_label
     
     return unique_cells, lineages
 
@@ -160,15 +165,12 @@ def apply_3d_watershed(raw, cells, lineages, mask=None):
     #        structure=np.ones((3,3,3)))
     #cells = random_walker(raw, cells, mode='cg_mg')
     
-    for cell_label, lineage_label in labels:
-        if cell_label != 0:
-            lineages[cells==cell_label] = lineage_label
+    lineages = update_lineage_label(labels, lineages, cells)
 
     return cells, lineages
 
 
 def create_candidate_graph(unique_cells, cells, lineages):
-   
     print 'create candidate graph'
     edges = []
     edge_weights = []
